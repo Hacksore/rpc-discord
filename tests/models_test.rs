@@ -14,7 +14,7 @@ use std::error::Error;
 //   let res = client.recv()?;
 //   println!("Result: {:?}", res);
 
-//   // get access token 
+//   // get access token
 //   let access_token = dotenv::var("ACCESS_TOKEN").unwrap();
 //   println!("Access token, {:?}", access_token);
 
@@ -51,28 +51,28 @@ use std::error::Error;
 
 #[test]
 fn test_models() -> Result<(), Box<dyn Error>> {
-  // load env vars
-  dotenv::dotenv().ok();
+    // load env vars
+    dotenv::dotenv().ok();
 
-  // access token
-  let access_token = dotenv::var("ACCESS_TOKEN").unwrap();
+    // access token
+    let access_token = dotenv::var("ACCESS_TOKEN").unwrap();
 
-  // connect to discord client with overlayed id
-  let mut client = DiscordIpcClient::new("905987126099836938")?;
-  client.connect()?;
+    // connect to discord client with overlayed id
+    let mut client = DiscordIpcClient::new("905987126099836938")?;
+    client.connect()?;
 
-  let login_result = client.login(access_token);
+    let login_result = client.login(access_token);
 
-  match login_result {
-    Ok(()) => {
-      println!("Login ok!");
-    }
-    Err(err) => {
-      println!("Login error! {:?}", err);
-    }
-  };
+    match login_result {
+        Ok(()) => {
+            println!("Login ok!");
+        }
+        Err(err) => {
+            println!("Login error! {:?}", err);
+        }
+    };
 
-  println!("Test?, {:?}", client.recv()?);
+    println!("Test?, {:?}", client.recv()?);
 
-  Ok(())
+    Ok(())
 }

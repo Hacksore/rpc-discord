@@ -2,9 +2,9 @@
 
 // Opcodes used by the discord client
 pub enum OPCODES {
-  Handshake,
-  Frame,
-  Close,
-  Ping,
-  Pong
+    Handshake,
+    Frame,
+    Close,
+    Ping,
+    Pong,
 }
