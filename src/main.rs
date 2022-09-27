@@ -33,7 +33,7 @@ fn handle_message(event: EventReceive) {
   }
 }
 
-const CHANNEL_ID: &str = "1019035649870934108";
+const CHANNEL_ID: &str = "975086424049213564";
 
 #[tokio::main]
 async fn main() {

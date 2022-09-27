@@ -27,8 +27,3 @@ pub enum BasedCommandReturn {
     data: HashMap<String, String>,
   },
 }
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct SelectVoiceChannelArgs {
-  id: u64,
-}
