@@ -20,7 +20,6 @@
 #![allow(missing_docs)]
 
 mod discord_ipc;
-mod pack_unpack;
 mod rpc;
 mod utils;
 

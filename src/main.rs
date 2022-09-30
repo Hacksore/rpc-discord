@@ -67,10 +67,10 @@ async fn main() {
     .await
     .ok();
 
-  client
-    .emit(Command::get_selected_voice_channel())
-    .await
-    .ok();
+  // client
+  //   .emit(Command::get_selected_voice_channel())
+  //   .await
+  //   .ok();
  
   // Keep running after prev thread starts
   loop {

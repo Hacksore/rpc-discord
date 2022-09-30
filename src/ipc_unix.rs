@@ -38,7 +38,7 @@ impl DiscordIpcClient {
 
     let mut client = Self {
       client_id: client_id.to_string(),
-      access_token: access_token.to_string(),
+      access_token: access_token.to_owned(),
       connected: false,
       socket: None,
     };
@@ -47,7 +47,7 @@ impl DiscordIpcClient {
     client.connect().await?;
 
     // let token = client.access_token;
-    // client.login(token.to_owned());
+    // client.login(access_token.to_string()).await.ok();
 
     Ok(client)
   }

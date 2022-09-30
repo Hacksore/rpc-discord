@@ -1,7 +1,7 @@
 use crate::{EventReceive, DiscordIpcClient};
 use crate::models::events::BasedEvent;
 use crate::opcodes::OPCODES;
-use crate::pack_unpack::{pack, unpack};
+use crate::utils::{pack, unpack};
 use async_trait::async_trait;
 use serde_json::json;
 use std::error::Error;
@@ -25,8 +25,8 @@ pub trait DiscordIpc {
     tokio::spawn(async move {
       loop {
         let (_opcode, payload) = client.recv().await.unwrap();
-
         println!("{}", payload);
+
         match serde_json::from_str::<EventReceive>(&payload) {
           Ok(e) => {
 
