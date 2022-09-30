@@ -1,3 +1,4 @@
+use crate::{EventReceive, DiscordIpcClient};
 use crate::models::events::BasedEvent;
 use crate::opcodes::OPCODES;
 use crate::pack_unpack::{pack, unpack};
@@ -7,7 +8,6 @@ use std::error::Error;
 use uuid::Uuid;
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
-
 /// TODO: probably should move things we dont want the consumer to use
 /// into the struct so they dont do anything bad
 ///
@@ -16,6 +16,34 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 /// Implemented via the [`DiscordIpcClient`](struct@crate::DiscordIpcClient) struct.
 #[async_trait]
 pub trait DiscordIpc {
+  async fn handler<F>(&mut self, func: F)
+  where
+    F: Fn(EventReceive) + std::marker::Send + 'static,
+  {
+    let mut client = self.get_client_instance();
+
+    tokio::spawn(async move {
+      loop {
+        let (_opcode, payload) = client.recv().await.unwrap();
+
+        println!("{}", payload);
+        match serde_json::from_str::<EventReceive>(&payload) {
+          Ok(e) => {
+
+            // we will look for READY and call this then it will inform the consumer
+            // dank pattermatching ooccurs here
+            // self.on_ready(func);
+
+            func(e);
+          }
+          Err(e) => {
+            println!("{:#?}", e);
+          }
+        }
+      }
+    });
+  }
+
   /// Connects the client to the Discord IPC.
   ///
   /// This method attempts to first establish a connection,
@@ -81,9 +109,6 @@ pub trait DiscordIpc {
 
     Ok(())
   }
-
-  #[doc(hidden)]
-  fn get_client_id(&self) -> &String;
 
   #[doc(hidden)]
   async fn connect_ipc(&mut self) -> Result<()>;
@@ -214,6 +239,12 @@ pub trait DiscordIpc {
 
   /// Closes the Discord IPC connection. Implementation is dependent on platform.
   async fn close(&mut self) -> Result<()>;
+  
+  // get the client id
+  fn get_client_id(&self) -> String;
+
+  // test this
+  fn get_client_instance(&self) -> DiscordIpcClient;
 
   async fn start() {}
 }

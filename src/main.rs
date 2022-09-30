@@ -33,7 +33,7 @@ fn handle_message(event: EventReceive) {
   }
 }
 
-const CHANNEL_ID: &str = "975086424049213564";
+const CHANNEL_ID: &str = "1019035649870934108";
 
 #[tokio::main]
 async fn main() {
@@ -47,17 +47,25 @@ async fn main() {
   let client_id = dotenv::var("CLIENT_ID").unwrap();
 
   // connect to discord client with overlayed id
-  let mut client = DiscordIpcClient::new(&client_id)
+  let mut client = DiscordIpcClient::new(&client_id, &access_token)
     .await
     .expect("Client failed to connect");
 
-  // login to the client
+  // test
   client.login(access_token).await.unwrap();
-
-  client.emit(Event::speaking_start_event(CHANNEL_ID)).await.ok();
-
+  
   // sub to all events to via this listener
   client.handler(handle_message).await;
+
+  client
+    .emit(Event::speaking_start_event(CHANNEL_ID))
+    .await
+    .ok();
+
+  client
+    .emit(Event::speaking_stop_event(CHANNEL_ID))
+    .await
+    .ok();
 
   client
     .emit(Command::get_selected_voice_channel())

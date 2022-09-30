@@ -20,52 +20,34 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 pub struct DiscordIpcClient {
   /// Client ID of the IPC client.
   pub client_id: String,
+  pub access_token: String,
   pub connected: bool,
   // Socket ref to the open socket
   pub socket: Option<UnixStream>,
-
-  // a valid access
-  pub access_token: Option<String>,
 }
 
 impl DiscordIpcClient {
-  pub async fn handler<F>(&mut self, func: F)
-  where
-    F: Fn(EventReceive) + std::marker::Send + 'static,
-  {
-    let mut client = self.clone();
 
-    tokio::spawn(async move {
-      loop {
-        let (_opcode, payload) = client.recv().await.unwrap();
-
-        match serde_json::from_str::<EventReceive>(&payload) {
-          Ok(e) => {
-            func(e);
-          }
-          Err(e) => {
-            println!("{:#?}", e);
-          }
-        }
-      }
-    });
-  }
   /// Creates a new `DiscordIpcClient`.
   ///
   /// # Examples
   /// ```
   /// let ipc_client = DiscordIpcClient::new("<some client id>")?;
   /// ```
-  pub async fn new(client_id: &str) -> Result<Self> {
+  pub async fn new(client_id: &str, access_token: &str) -> Result<Self> {    
+
     let mut client = Self {
       client_id: client_id.to_string(),
+      access_token: access_token.to_string(),
       connected: false,
       socket: None,
-      access_token: None,
     };
 
     // connect to client
     client.connect().await?;
+
+    // let token = client.access_token;
+    // client.login(token.to_owned());
 
     Ok(client)
   }
@@ -136,7 +118,11 @@ impl DiscordIpc for DiscordIpcClient {
     Ok(())
   }
 
-  fn get_client_id(&self) -> &String {
-    &self.client_id
+  fn get_client_id(&self) -> String {
+    self.client_id.to_owned()
+  }
+
+  fn get_client_instance(&self) -> DiscordIpcClient {
+    self.clone()
   }
 }
