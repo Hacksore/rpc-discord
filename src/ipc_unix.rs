@@ -1,14 +1,13 @@
 use crate::discord_ipc::DiscordIpc;
-use crate::EventReceive;
 use async_net::{unix::UnixStream, Shutdown};
 use async_trait::async_trait;
 use futures_lite::io::AsyncWriteExt;
 use futures_lite::AsyncReadExt;
+use crate::utils::get_pipe_pattern;
 use serde_json::json;
-use std::{env::var, error::Error, path::PathBuf};
+use std::{error::Error};
 
 // Environment keys to search for the Discord pipe
-const ENV_KEYS: [&str; 4] = ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"];
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -52,20 +51,7 @@ impl DiscordIpcClient {
     Ok(client)
   }
 
-  fn get_pipe_pattern() -> PathBuf {
-    let mut path = String::new();
 
-    for key in &ENV_KEYS {
-      match var(key) {
-        Ok(val) => {
-          path = val;
-          break;
-        }
-        Err(_e) => continue,
-      }
-    }
-    PathBuf::from(path)
-  }
 }
 
 #[async_trait]
@@ -73,7 +59,7 @@ impl DiscordIpc for DiscordIpcClient {
   async fn connect_ipc(&mut self) -> Result<()> {
     // iterate over the likely places to find the socket
     for i in 0..10 {
-      let path = DiscordIpcClient::get_pipe_pattern().join(format!("discord-ipc-{}", i));
+      let path = get_pipe_pattern().join(format!("discord-ipc-{}", i));
 
       match UnixStream::connect(&path).await {
         Ok(socket) => {

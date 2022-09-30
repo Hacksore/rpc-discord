@@ -2,6 +2,8 @@ use serde_json::Value;
 use uuid::Uuid;
 use std::convert::TryInto;
 use std::error::Error;
+use std::path::PathBuf;
+use std::env::var;
 
 pub fn create_json(mut value: serde_json::Value) -> String {
   let uuid = Uuid::new_v4().to_string();
@@ -32,4 +34,21 @@ pub fn unpack(data: Vec<u8>) -> Result<(u32, u32), Box<dyn Error>> {
   let header = u32::from_le_bytes(header.try_into()?);
 
   Ok((opcode, header))
+}
+
+
+const ENV_KEYS: [&str; 4] = ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"];
+pub fn get_pipe_pattern() -> PathBuf {
+  let mut path = String::new();
+
+  for key in &ENV_KEYS {
+    match var(key) {
+      Ok(val) => {
+        path = val;
+        break;
+      }
+      Err(_e) => continue,
+    }
+  }
+  PathBuf::from(path)
 }

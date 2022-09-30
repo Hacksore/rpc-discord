@@ -1,6 +1,6 @@
 use rpc_discord::models::{commands::*, events::*};
 use rpc_discord::EventReceive;
-use rpc_discord::{Command, DiscordIpc, DiscordIpcClient, Event};
+use rpc_discord::{DiscordIpc, DiscordIpcClient, Event};
 
 // get all messages from the client
 fn handle_message(event: EventReceive) {
