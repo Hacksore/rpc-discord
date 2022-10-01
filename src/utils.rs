@@ -1,4 +1,4 @@
-use crate::{Result, EventReceive};
+use crate::Result;
 use serde_json::Value;
 use std::convert::TryInto;
 use std::env::var;
