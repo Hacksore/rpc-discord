@@ -1,7 +1,11 @@
 [package]
 name = "rpc-discord"
 version = "0.0.1-alpha.4"
-authors = ["Hacksore <996134+Hacksore@users.noreply.github.com>", "Adel-ak <adelkerow@gmail.com>", "sardonicism-04 <110789901+sardonicism-04@users.noreply.github.com>"]
+authors = [
+    "Hacksore <996134+Hacksore@users.noreply.github.com>",
+    "Adel-ak <adelkerow@gmail.com>",
+    "sardonicism-04 <110789901+sardonicism-04@users.noreply.github.com>",
+]
 edition = "2021"
 description = "A simple, cross-platform crate for interfacing with Discord client locally via RPC"
 readme = "README.md"
@@ -21,5 +25,4 @@ uuid = { version = "0.8", features = ["v4"] }
 dotenv = "0.15.0"
 tokio = { version = "1.21.1", features = ["full"] }
 async-trait = "0.1.57"
-async-net = "1.7.0"
-futures-lite = "1.12.0"
+thiserror = "1.0.37"
