@@ -4,6 +4,7 @@ use std::convert::TryInto;
 use std::env::var;
 use std::path::PathBuf;
 use uuid::Uuid;
+use std::path::Path;
 
 pub fn create_json(value: &mut serde_json::Value) -> Result<String> {
   let uuid = Uuid::new_v4().to_string();
@@ -37,7 +38,9 @@ pub fn unpack(data: Vec<u8>) -> Result<(u32, u32)> {
 }
 
 const ENV_KEYS: [&str; 4] = ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"];
-pub fn get_pipe_pattern() -> PathBuf {
+
+/// returns the path of the temp dir on a unix system
+pub fn temp_directory() -> PathBuf {
   let mut path = String::new();
 
   for key in &ENV_KEYS {
@@ -50,4 +53,19 @@ pub fn get_pipe_pattern() -> PathBuf {
     }
   }
   PathBuf::from(path)
+}
+
+/// iterate over 0-10 index and check if files exists then return the path
+pub fn get_pipe_pattern() -> PathBuf {
+  for i in 0..10 {
+    #[cfg(target_os = "windows")]
+    let path = format!(r"\\?\pipe\discord-ipc-{}", i);
+
+    #[cfg(target_family = "unix")]
+    let path = temp_directory().join(format!("discord-ipc-{}", i));
+    if Path::new(&path).exists() {
+      return path;
+    }
+  }
+  panic!("Could not find discord-ipc-0");
 }

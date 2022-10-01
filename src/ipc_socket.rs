@@ -1,22 +1,23 @@
 use std::sync::Arc;
-
 use crate::Result;
 
 #[cfg(target_family = "unix")]
 use tokio::net::unix::{OwnedReadHalf, OwnedWriteHalf};
+
 #[cfg(target_family = "unix")]
 use tokio::net::UnixStream;
 use tokio::{
   io::{AsyncReadExt, AsyncWriteExt},
   sync::Mutex,
 };
+
 #[cfg(target_family = "windows")]
 use tokio::{
   io::{ReadHalf, WriteHalf},
   net::windows::named_pipe::{ClientOptions, NamedPipeClient},
 };
 
-use crate::{pack, unpack};
+use crate::{pack, unpack, errors::DiscordRPCError, get_pipe_pattern};
 
 #[cfg(target_family = "windows")]
 type ReadHalfType = ReadHalf<NamedPipeClient>;
@@ -35,37 +36,25 @@ pub(crate) struct DiscordIpcSocket {
 }
 
 impl DiscordIpcSocket {
+  /// Used to get the a socket like impl on windows as technical it's a named pipe
   #[cfg(target_os = "windows")]
   async fn get_inner_socket() -> Result<(ReadHalfType, WriteHalfType)> {
-    for i in 0..10 {
-      let name = format!(r"\\?\pipe\discord-ipc-{}", i);
-      match ClientOptions::new().open(&name) {
-        Ok(client) => {
-          let (read_half, write_half) = tokio::io::split(client);
-          return Ok((read_half, write_half));
-        }
-        Err(_) => continue,
-      }
+    let path = get_pipe_pattern();
+    if let Ok(socket) = ClientOptions::new().open(&name).await {
+      return Ok(socket.into_split());
     }
 
-    return Err(eyre!("Couldn't connect to the Discord IPC socket"));
+    Err(DiscordRPCError::CouldNotConnect)
   }
 
   #[cfg(target_family = "unix")]
   async fn get_inner_socket() -> Result<(ReadHalfType, WriteHalfType)> {
-    use crate::{errors::DiscordRPCError, get_pipe_pattern};
+    let path = get_pipe_pattern();
 
-    for i in 0..10 {
-      let path = get_pipe_pattern().join(format!("discord-ipc-{}", i));
-
-      match UnixStream::connect(&path).await {
-        Ok(socket) => {
-          return Ok(socket.into_split());
-        }
-        Err(_) => continue,
-      }
+    if let Ok(socket) = UnixStream::connect(&path).await {
+      return Ok(socket.into_split());
     }
-
+ 
     Err(DiscordRPCError::CouldNotConnect)
   }
 
