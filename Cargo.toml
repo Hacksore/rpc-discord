@@ -4,6 +4,7 @@ version = "0.0.1-alpha.4"
 authors = [
     "Hacksore <996134+Hacksore@users.noreply.github.com>",
     "Adel-ak <adelkerow@gmail.com>",
+    "zihadmahiuddin",
     "sardonicism-04 <110789901+sardonicism-04@users.noreply.github.com>",
 ]
 edition = "2021"
