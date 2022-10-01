@@ -40,8 +40,9 @@ impl DiscordIpcSocket {
   #[cfg(target_os = "windows")]
   async fn get_inner_socket() -> Result<(ReadHalfType, WriteHalfType)> {
     let path = get_pipe_pattern();
-    if let Ok(socket) = ClientOptions::new().open(&name).await {
-      return Ok(socket.into_split());
+    if let Ok(client) = ClientOptions::new().open(&path) {
+      let (read_half, write_half) = tokio::io::split(client);
+      return Ok((read_half, write_half));
     }
 
     Err(DiscordRPCError::CouldNotConnect)

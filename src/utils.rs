@@ -63,8 +63,9 @@ pub fn get_pipe_pattern() -> PathBuf {
 
     #[cfg(target_family = "unix")]
     let path = temp_directory().join(format!("discord-ipc-{}", i));
+    
     if Path::new(&path).exists() {
-      return path;
+      return Path::new(&path).to_path_buf();
     }
   }
   panic!("Could not find discord-ipc-0");
