@@ -1,5 +1,5 @@
 mod rpc;
-mod utils;
+pub mod utils;
 
 pub mod errors;
 pub mod opcodes;

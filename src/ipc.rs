@@ -147,7 +147,13 @@ impl DiscordIpcClient {
   }
 
   /// send a json string payload to the socket
-  pub async fn emit(&mut self, command: &RPCCommand) -> Result<()> {
+  pub async fn emit_string(&mut self, payload: String) -> Result<()> {
+    self.socket.send(&payload, OPCODES::Frame as u8).await.unwrap();
+    Ok(())
+  }
+
+  /// send a json string payload to the socket
+  pub async fn emit_command(&mut self, command: &RPCCommand) -> Result<()> {
     let mut command_json = command.to_json()?;
     let json_string = &create_json(&mut command_json)?;
     self
