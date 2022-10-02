@@ -12,7 +12,7 @@ pub fn create_json(value: &mut serde_json::Value) -> Result<String> {
   let payload = value.as_object_mut().expect("payload must be an object");
   payload.insert("nonce".to_string(), Value::String(uuid));
 
-  // TODO: RISKY NEED TO FIX ERROR HANDLING
+  // TODO: handle error
   Ok(serde_json::to_string(&payload)?)
 }
 
