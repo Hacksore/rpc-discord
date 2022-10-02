@@ -1,6 +1,6 @@
 [package]
 name = "rpc-discord"
-version = "0.0.1-alpha.4"
+version = "0.0.1-alpha.5"
 authors = [
   "Hacksore <996134+Hacksore@users.noreply.github.com>",
   "Adel-ak <adelkerow@gmail.com>",
@@ -8,9 +8,9 @@ authors = [
   "sardonicism-04 <110789901+sardonicism-04@users.noreply.github.com>",
 ]
 edition = "2021"
-description = "A simple, cross-platform crate for interfacing with Discord client locally via RPC"
+description = "Cross-platform crate for interfacing with the Discord client locally via RPC"
 readme = "README.md"
-repository = "https://github.com/hacksore/discord-ipc-rust"
+repository = "https://github.com/hacksore/rpc-discord"
 license = "MIT"
 keywords = ["discord", "ipc", "RPC", "client"]
 

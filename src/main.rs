@@ -61,20 +61,20 @@ async fn main() -> rpc_discord::Result<()> {
   client.handler(handle_message).await;
 
   client
-    .emit(&RPCCommand::Subscribe(RPCEvent::SpeakingStart {
+    .emit_command(&RPCCommand::Subscribe(RPCEvent::SpeakingStart {
       channel_id: CHANNEL_ID.to_string(),
     }))
     .await
     .ok();
 
   client
-    .emit(&RPCCommand::Subscribe(RPCEvent::SpeakingStop {
+    .emit_command(&RPCCommand::Subscribe(RPCEvent::SpeakingStop {
       channel_id: CHANNEL_ID.to_string(),
     }))
     .await
     .ok();
 
-  client.emit(&RPCCommand::GetSelectedVoiceChannel).await.ok();
+  client.emit_command(&RPCCommand::GetSelectedVoiceChannel).await.ok();
 
   // Keep running after prev thread starts
   loop {
