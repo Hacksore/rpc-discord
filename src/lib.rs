@@ -2,18 +2,18 @@ mod rpc;
 mod utils;
 
 pub mod errors;
-pub mod opcodes;
 pub mod models;
+pub mod opcodes;
 
 mod ipc;
 mod ipc_socket;
 
 use serde::{Deserialize, Serialize};
 
-pub use ipc::DiscordIpcClient;
-pub use utils::*;
-use models::{commands::BasedCommandReturn, events::BasedEvent};
 use errors::DiscordRPCError;
+pub use ipc::DiscordIpcClient;
+use models::{commands::BasedCommandReturn, events::BasedEvent};
+pub use utils::*;
 
 pub type Result<T, E = DiscordRPCError> = std::result::Result<T, E>;
 

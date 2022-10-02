@@ -170,7 +170,6 @@ impl DiscordIpcClient {
         println!("{}", &payload);
         match serde_json::from_str::<EventReceive>(&payload) {
           Ok(e) => {
-            
             // TODO: give the consumer a ready event so they can sub to events
 
             func(e);

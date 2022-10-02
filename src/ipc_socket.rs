@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use crate::Result;
+use std::sync::Arc;
 
 #[cfg(target_family = "unix")]
 use tokio::net::unix::{OwnedReadHalf, OwnedWriteHalf};
@@ -17,7 +17,7 @@ use tokio::{
   net::windows::named_pipe::{ClientOptions, NamedPipeClient},
 };
 
-use crate::{pack, unpack, errors::DiscordRPCError, get_pipe_pattern};
+use crate::{errors::DiscordRPCError, get_pipe_pattern, pack, unpack};
 
 #[cfg(target_family = "windows")]
 type ReadHalfType = ReadHalf<NamedPipeClient>;
@@ -55,7 +55,7 @@ impl DiscordIpcSocket {
     if let Ok(socket) = UnixStream::connect(&path).await {
       return Ok(socket.into_split());
     }
- 
+
     Err(DiscordRPCError::CouldNotConnect)
   }
 

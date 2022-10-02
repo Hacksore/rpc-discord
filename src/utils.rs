@@ -2,9 +2,9 @@ use crate::Result;
 use serde_json::Value;
 use std::convert::TryInto;
 use std::env::var;
+use std::path::Path;
 use std::path::PathBuf;
 use uuid::Uuid;
-use std::path::Path;
 
 pub fn create_json(value: &mut serde_json::Value) -> Result<String> {
   let uuid = Uuid::new_v4().to_string();
@@ -63,7 +63,7 @@ pub fn get_pipe_pattern() -> PathBuf {
 
     #[cfg(target_family = "unix")]
     let path = temp_directory().join(format!("discord-ipc-{}", i));
-    
+
     if Path::new(&path).exists() {
       return Path::new(&path).to_path_buf();
     }
