@@ -3,9 +3,11 @@ mod error;
 mod login;
 mod ready;
 mod selected_channel;
+mod authenticate;
 
 pub use base::BasedEvent;
 pub use error::*;
 pub use login::*;
 pub use ready::*;
 pub use selected_channel::*;
+pub use authenticate::*;
