@@ -1,20 +1,23 @@
 name: CI
-on: [push, pull_request]
+
+on:
+  push:
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build_and_test:
+    name: Rust project - latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    name: "${{ matrix.os }}"
-    runs-on: ${{ matrix.os }}"
+        toolchain:
+          - stable
+          - beta
+          - nightly
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
-      - run: cargo build
+      - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+      - run: cargo build --verbose
