@@ -20,7 +20,6 @@ pub fn create_json(value: &mut serde_json::Value) -> String {
   match result {
     Ok(payload) => {
       // return string payload if good
-      println!("Payload {}", payload);
       payload
     }
     Err(_) => {

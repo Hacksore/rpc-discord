@@ -1,13 +1,15 @@
 use crate::ipc_socket::DiscordIpcSocket;
 use crate::models::events::BasedEvent;
+use crate::models::rpc_command::RPCCommand;
 use crate::models::shared::User;
 use crate::opcodes::OPCODES;
+
 use crate::EventReceive;
 use crate::Result;
 use serde_json::json;
 use uuid::Uuid;
 
-// Environment keys to search for the Discord pipe
+type Callback = fn();
 
 #[allow(dead_code)]
 #[allow(missing_docs)]
@@ -21,7 +23,10 @@ pub struct DiscordIpcClient {
   socket: DiscordIpcSocket,
 
   /// User data object
-  pub userdata: Option<User>
+  pub userdata: Option<User>,
+
+  /// ready callback?
+  pub ready_callback: Option<Callback>
 }
 
 impl DiscordIpcClient {
@@ -39,13 +44,17 @@ impl DiscordIpcClient {
       access_token: access_token.to_owned(),
       userdata: None,
       socket,
+      ready_callback: None
     };
 
     // connect to client
-    client.connect().await?;
+    client.connect().await.ok();
+   
+    // test auth client
+    // client.authorize().await.ok();
 
-    // let token = client.access_token;
-    // client.login(access_token.to_string()).await.ok();
+    // login to cleint
+    client.login().await?;
 
     Ok(client)
   }
@@ -72,6 +81,7 @@ impl DiscordIpcClient {
 
     let (_opcode, payload) = self.socket.recv().await.unwrap();
 
+    println!("Connect raw {}", payload);
     // spooky line is not working
     let payload = serde_json::from_str(&payload)?;
     match payload {
@@ -116,6 +126,32 @@ impl DiscordIpcClient {
     Ok(())
   }
 
+  /// Send authorize which does an in app popup modal
+  pub async fn authorize(&mut self) -> Result<()> {
+    let nonce = Uuid::new_v4().to_string();
+
+    self
+      .socket
+      .send(
+        &json!({
+          "cmd": RPCCommand::Authorize,
+          "args": {
+            "client_id": self.client_id,
+            "scopes": ["rpc", "identify"],
+            "rpc_token": "ligma"
+          },
+          "nonce": nonce
+        })
+        .to_string(),
+        OPCODES::Frame as u8,
+      )
+      .await?;
+
+    self.socket.recv().await?;
+
+    Ok(())
+  }
+
   /// Send auth
   ///
   /// This method sends the auth token to the IPC.
@@ -126,6 +162,8 @@ impl DiscordIpcClient {
 
     // use token stored in instance
     let token = &self.access_token;
+
+    println!("Logging in with token, {}", token);
     self
       .socket
       .send(
@@ -165,6 +203,13 @@ impl DiscordIpcClient {
   //   Ok(())
   // }
 
+  pub async fn handle_ready<F>(&mut self, func: F)
+  where
+    F: Fn(EventReceive) + Send + Sync + 'static,
+  {
+
+  }
+
   pub async fn handler<F>(&mut self, func: F)
   where
     F: Fn(EventReceive) + Send + Sync + 'static,
@@ -173,6 +218,7 @@ impl DiscordIpcClient {
     tokio::spawn(async move {
       loop {
         let (_opcode, payload) = socket_clone.recv().await.unwrap();
+        println!("raw {}", payload);
         match serde_json::from_str::<EventReceive>(&payload) {
           Ok(e) => {
             // TODO: give the consumer a ready event so they can sub to events

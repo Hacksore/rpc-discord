@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use super::ChannelData;
+use super::{ChannelData, AuthorizeData};
 
 /// Currently this handles all the received commands from the discord socket
 #[derive(Serialize, Deserialize, Debug)]
@@ -17,7 +17,9 @@ pub enum BasedCommandReturn {
   SelectVoiceChannel {
     data: ChannelData,
   },
-
+  Authorize {
+    data: AuthorizeData
+  },
   /// Subscribe
   Subscribe {
     data: HashMap<String, String>,

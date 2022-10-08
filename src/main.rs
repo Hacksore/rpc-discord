@@ -23,14 +23,15 @@ async fn main() -> rpc_discord::Result<()> {
     .await
     .expect("Client failed to connect");
 
-  // login to the client
-  client.login().await.unwrap();
 
   // sub to all events to via this listener
   client.handler(handle_message).await;
 
-  // get voice channel
-  println!("Sending get selected payload...");
+  let d = std::time::Duration::from_millis(3000);
+  std::thread::sleep(d);
+
+  // // get voice channel
+  // println!("Sending get selected payload...");
   client.emit_string(DiscordCommand::get_selected_voice_channel()).await.ok();
 
   client
