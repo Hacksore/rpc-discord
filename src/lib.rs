@@ -1,6 +1,5 @@
-mod rpc;
 pub mod utils;
-
+pub mod rpc;
 pub mod errors;
 pub mod models;
 pub mod opcodes;
@@ -14,6 +13,8 @@ use errors::DiscordRPCError;
 pub use ipc::DiscordIpcClient;
 use models::{commands::BasedCommandReturn, events::BasedEvent};
 pub use utils::*;
+
+pub use rpc::discord_command::DiscordCommand;
 
 pub type Result<T, E = DiscordRPCError> = std::result::Result<T, E>;
 

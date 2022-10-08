@@ -1,42 +1,11 @@
-use rpc_discord::models::rpc_command::RPCCommand;
-use rpc_discord::models::rpc_event::RPCEvent;
-use rpc_discord::models::{commands::*, events::*};
-use rpc_discord::{DiscordIpcClient, EventReceive};
+use rpc_discord::{DiscordCommand, DiscordIpcClient, EventReceive, rpc::discord_event::DiscordEvent};
 
 // get all messages from the client
 fn handle_message(event: EventReceive) {
-  if let EventReceive::CommandReturn(event_type) = event {
-    match event_type {
-      BasedCommandReturn::GetSelectedVoiceChannel { data } => {
-        println!("{:#?}", data);
-
-        if let Some(data) = data {
-          for user in data.voice_states.iter() {
-            println!("{}", user.nick);
-          }
-        }
-      }
-      BasedCommandReturn::SelectVoiceChannel { data } => {
-        println!("{:#?}", data.name);
-      }
-      _ => {
-        println!("{:#?}", event_type);
-      }
-    }
-  } else if let EventReceive::Event(event_type) = event {
-    match event_type {
-      BasedEvent::SpeakingStart { data } => {
-        println!("{} started speaking", data.user_id);
-      }
-      BasedEvent::SpeakingStop { data } => {
-        println!("{} stopped speaking", data.user_id);
-      }
-      _ => {}
-    }
-  }
+  println!("event {:#?}", event);
 }
 
-const CHANNEL_ID: &str = "1022132922565804062";
+const CHANNEL_ID: &str = "1023308619497873419";
 
 #[tokio::main]
 async fn main() -> rpc_discord::Result<()> {
@@ -54,27 +23,25 @@ async fn main() -> rpc_discord::Result<()> {
     .await
     .expect("Client failed to connect");
 
-  // test
-  client.login(&access_token).await.unwrap();
+  // login to the client
+  client.login().await.unwrap();
 
   // sub to all events to via this listener
   client.handler(handle_message).await;
 
+  // get voice channel
+  println!("Sending get selected payload...");
+  client.emit_string(DiscordCommand::get_selected_voice_channel()).await.ok();
+
   client
-    .emit_command(&RPCCommand::Subscribe(RPCEvent::SpeakingStart {
-      channel_id: CHANNEL_ID.to_string(),
-    }))
+    .emit_string(DiscordEvent::speaking_start(CHANNEL_ID))
     .await
     .ok();
 
   client
-    .emit_command(&RPCCommand::Subscribe(RPCEvent::SpeakingStop {
-      channel_id: CHANNEL_ID.to_string(),
-    }))
+    .emit_string(DiscordEvent::speaking_stop(CHANNEL_ID))
     .await
     .ok();
-
-  client.emit_command(&RPCCommand::GetSelectedVoiceChannel).await.ok();
 
   // Keep running after prev thread starts
   loop {

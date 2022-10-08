@@ -1,27 +1,14 @@
-use discord_ipc::{
-  models::commands::*, Command, DiscordIpc, DiscordIpcClient, Event, EventReceive,
-};
+use rpc_discord::models::rpc_command::RPCCommand;
+use rpc_discord::models::rpc_event::RPCEvent;
+use rpc_discord::{DiscordIpcClient, EventReceive};
 
 // get all messages from the client
 fn handle_message(event: EventReceive) {
-  if let EventReceive::CommandReturn(event_type) = event {
-    match event_type {
-      BasedCommandReturn::GetSelectedVoiceChannel { data } => {
-        println!("{:#?}", data.guild_id);
-
-        for user in data.voice_states.iter() {
-          println!("{}", user.nick);
-        }
-      }
-      BasedCommandReturn::SelectVoiceChannel { .. } => todo!(),
-      _ => {
-        println!("{:#?}", event_type);
-      }
-    }
-  } else if let EventReceive::Event(event_type) = event {
-    println!("Evt {:#?}", event_type);
-  }
+  // get data here
+  println!("{:#?}", event);
 }
+
+const CHANNEL_ID: &str = "975086424049213564";
 
 #[tokio::main]
 async fn main() {
@@ -35,28 +22,36 @@ async fn main() {
   let client_id = dotenv::var("CLIENT_ID").unwrap();
 
   // connect to discord client with overlayed id
-  let mut client = DiscordIpcClient::new(&client_id)
+  let mut client = DiscordIpcClient::new(&client_id, &access_token)
     .await
     .expect("Client failed to connect");
 
   // login to the client
-  client.login(access_token).await.unwrap();
+  client.login(&access_token).await.unwrap();
+
+  // sub to all events to via this listener
+  client.handler(handle_message).await;
 
   // test join a voice channel
   client
-    .emit(Command::get_selected_voice_channel())
+    .emit_command(&RPCCommand::Subscribe(RPCEvent::SpeakingStart {
+      channel_id: CHANNEL_ID.to_string(),
+    }))
     .await
     .ok();
 
   client
-    .emit(Event::speaking_start_event("1022132922565804062"))
-    .await
-    .ok();
-  client
-    .emit(Event::speaking_stop_event("1022132922565804062"))
+    .emit_command(&RPCCommand::Subscribe(RPCEvent::SpeakingStop {
+      channel_id: CHANNEL_ID.to_string(),
+    }))
     .await
     .ok();
 
-  // sub to all events to via this listener
-  client.handler(handle_message).await.ok();
+  client.emit_command(&RPCCommand::GetSelectedVoiceChannel).await.ok();
+
+  // Keep running after prev thread starts
+  loop {
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+  }
+
 }

@@ -1,7 +1,6 @@
-use crate::create_json;
 use crate::ipc_socket::DiscordIpcSocket;
 use crate::models::events::BasedEvent;
-use crate::models::rpc_command::RPCCommand;
+use crate::models::shared::User;
 use crate::opcodes::OPCODES;
 use crate::EventReceive;
 use crate::Result;
@@ -20,6 +19,9 @@ pub struct DiscordIpcClient {
   pub access_token: String,
   // Socket ref to the open socket
   socket: DiscordIpcSocket,
+
+  /// User data object
+  pub userdata: Option<User>
 }
 
 impl DiscordIpcClient {
@@ -35,6 +37,7 @@ impl DiscordIpcClient {
     let mut client = Self {
       client_id: client_id.to_string(),
       access_token: access_token.to_owned(),
+      userdata: None,
       socket,
     };
 
@@ -65,17 +68,17 @@ impl DiscordIpcClient {
   /// ```
   async fn connect(&mut self) -> Result<()> {
     println!("Connecting to client...");
-
     self.send_handshake().await?;
 
-    // TODO: handle error
     let (_opcode, payload) = self.socket.recv().await.unwrap();
 
     // spooky line is not working
     let payload = serde_json::from_str(&payload)?;
     match payload {
-      BasedEvent::Ready { .. } => {
-        println!("Connected to discord and got ready event!");
+      BasedEvent::Ready { data } => {
+        println!("Connected to discord and got ready event! {:#?}", data);
+        
+        self.userdata = Some(data.user);
       }
       _ => {
         println!("Could not connect to discord...");
@@ -110,10 +113,6 @@ impl DiscordIpcClient {
       )
       .await?;
 
-    // // TODO: Return an Err if the handshake is rejected
-    // NOTE: this prolly shouldnt be done here as we dont want to consume messages here
-    // self.recv()?;
-
     Ok(())
   }
 
@@ -122,17 +121,18 @@ impl DiscordIpcClient {
   /// This method sends the auth token to the IPC.
   ///
   /// Returns an `Err` variant if sending the handshake failed.
-  pub async fn login(&mut self, access_token: &str) -> Result<()> {
+  pub async fn login(&mut self) -> Result<()> {
     let nonce = Uuid::new_v4().to_string();
 
-    // TODO: move this to a struct and call send_cmd
+    // use token stored in instance
+    let token = &self.access_token;
     self
       .socket
       .send(
         &json!({
           "cmd": "AUTHENTICATE",
           "args": {
-            "access_token": access_token
+            "access_token": token
           },
           "nonce": nonce
         })
@@ -152,17 +152,18 @@ impl DiscordIpcClient {
     Ok(())
   }
 
-  /// send a json string payload to the socket
-  pub async fn emit_command(&mut self, command: &RPCCommand) -> Result<()> {
-    let mut command_json = command.to_json()?;
-    let json_string = &create_json(&mut command_json)?;
-    self
-      .socket
-      .send(json_string, OPCODES::Frame as u8)
-      .await
-      .unwrap();
-    Ok(())
-  }
+  // /// send a json string payload to the socket
+  // pub async fn emit_command(&mut self, command: &RPCCommand) -> Result<()> {
+  //   let mut command_json = command.to_json()?;
+  //   let json_string = &create_json(&mut command_json)?;
+  //   println!("Sending, {}", json_string);
+  //   self
+  //     .socket
+  //     .send(json_string, OPCODES::Frame as u8)
+  //     .await
+  //     .unwrap();
+  //   Ok(())
+  // }
 
   pub async fn handler<F>(&mut self, func: F)
   where
@@ -172,8 +173,6 @@ impl DiscordIpcClient {
     tokio::spawn(async move {
       loop {
         let (_opcode, payload) = socket_clone.recv().await.unwrap();
-
-        println!("{}", &payload);
         match serde_json::from_str::<EventReceive>(&payload) {
           Ok(e) => {
             // TODO: give the consumer a ready event so they can sub to events

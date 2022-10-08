@@ -1,5 +1,2 @@
-// mod command;
-// mod event;
-
-// pub use command::Command;
-// pub use event::Event;
+pub mod discord_command;
+pub mod discord_event;

@@ -6,17 +6,30 @@ use std::path::Path;
 use std::path::PathBuf;
 use uuid::Uuid;
 
-pub fn create_json(value: &mut serde_json::Value) -> Result<String> {
+
+/// Generic function to take in a serde value and inject a nonce 
+/// and convert the output to a json string used to send to discord
+pub fn create_json(value: &mut serde_json::Value) -> String {
   let uuid = Uuid::new_v4().to_string();
 
   let payload = value.as_object_mut().expect("payload must be an object");
   payload.insert("nonce".to_string(), Value::String(uuid));
 
-  // TODO: handle error
-  Ok(serde_json::to_string(&payload)?)
+  let result = serde_json::to_string(&payload);
+
+  match result {
+    Ok(payload) => {
+      // return string payload if good
+      println!("Payload {}", payload);
+      payload
+    }
+    Err(_) => {
+      panic!("Something went wrong converting the obj to string")
+    }
+  }
 }
 
-// Re-implement some packing methods in Rust
+/// Re-implement some packing methods in Rust
 pub fn pack(opcode: u32, data_len: u32) -> Result<Vec<u8>> {
   let mut bytes = Vec::new();
 
@@ -27,6 +40,7 @@ pub fn pack(opcode: u32, data_len: u32) -> Result<Vec<u8>> {
   Ok(bytes)
 }
 
+/// Unpack a message from the discord socket
 pub fn unpack(data: Vec<u8>) -> Result<(u32, u32)> {
   let data = data.as_slice();
   let (opcode, header) = data.split_at(std::mem::size_of::<u32>());
