@@ -14,8 +14,9 @@ pub fn create_json(value: &mut serde_json::Value) -> String {
 
   let payload = value.as_object_mut().expect("payload must be an object");
   payload.insert("nonce".to_string(), Value::String(uuid));
-
   let result = serde_json::to_string(&payload);
+
+  println!("[OUTGOING] {:?}", result);
 
   match result {
     Ok(payload) => {

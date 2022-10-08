@@ -24,15 +24,14 @@ async fn main() -> rpc_discord::Result<()> {
     .expect("Client failed to connect");
 
 
+  client.login().await.ok();
+
   // sub to all events to via this listener
   client.handler(handle_message).await;
 
-  let d = std::time::Duration::from_millis(3000);
-  std::thread::sleep(d);
-
   // // get voice channel
   // println!("Sending get selected payload...");
-  client.emit_string(DiscordCommand::get_selected_voice_channel()).await.ok();
+  client.emit_string(DiscordCommand::select_voice_channel("975086424049213564")).await.ok();
 
   client
     .emit_string(DiscordEvent::speaking_start(CHANNEL_ID))

@@ -54,7 +54,7 @@ impl DiscordIpcClient {
     // client.authorize().await.ok();
 
     // login to cleint
-    client.login().await?;
+    // client.login().await?;
 
     Ok(client)
   }
@@ -81,7 +81,6 @@ impl DiscordIpcClient {
 
     let (_opcode, payload) = self.socket.recv().await.unwrap();
 
-    println!("Connect raw {}", payload);
     // spooky line is not working
     let payload = serde_json::from_str(&payload)?;
     match payload {
@@ -218,7 +217,7 @@ impl DiscordIpcClient {
     tokio::spawn(async move {
       loop {
         let (_opcode, payload) = socket_clone.recv().await.unwrap();
-        println!("raw {}", payload);
+        println!("[INCOMING] {}", payload);
         match serde_json::from_str::<EventReceive>(&payload) {
           Ok(e) => {
             // TODO: give the consumer a ready event so they can sub to events

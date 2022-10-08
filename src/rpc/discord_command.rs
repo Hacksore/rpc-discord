@@ -20,7 +20,10 @@ impl DiscordCommand {
   /// used to get set the clients current channel
   pub fn select_voice_channel(id: &str) -> String {
     let mut payload = serde_json::json!({
-      "cmd": RPCCommand::SelectVoiceChannel { channel_id: id.to_string() },
+      "cmd": RPCCommand::SelectVoiceChannel,
+      "args": {
+        "channel_id": id
+      },
       "evt": null
     });
 
