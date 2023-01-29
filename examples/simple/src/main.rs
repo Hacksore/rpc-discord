@@ -51,9 +51,12 @@ async fn main() -> rpc_discord::Result<()> {
   let client_id = dotenv::var("CLIENT_ID").expect("You must set CLIENT_ID");
 
   // connect to discord client with overlayed id
-  let mut rpc = DiscordIpcClient::new(&client_id, &access_token)
+  let mut rpc = DiscordIpcClient::new(&client_id)
     .await
     .expect("Client failed to connect");
+
+  // use the access_token to login
+  rpc.login(&access_token).await.ok();
 
   // ask discord for the current channel
   rpc

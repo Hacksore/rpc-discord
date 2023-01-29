@@ -17,7 +17,6 @@ use uuid::Uuid;
 pub struct DiscordIpcClient {
   /// Client ID of the IPC client.
   pub client_id: String,
-  pub access_token: String,
   // Socket ref to the open socket
   socket: DiscordIpcSocket,
 }
@@ -27,22 +26,18 @@ impl DiscordIpcClient {
   ///
   /// ### Examples
   /// ```
-  /// let ipc_client = DiscordIpcClient::new("<some client id>", "<some access token>")?;
+  /// let ipc_client = DiscordIpcClient::new("<some client id>")?;
   /// ```
-  pub async fn new(client_id: &str, access_token: &str) -> Result<Self> {
+  pub async fn new(client_id: &str) -> Result<Self> {
     let socket = DiscordIpcSocket::new().await?;
 
     let mut client = Self {
       client_id: client_id.to_string(),
-      access_token: access_token.to_owned(),
       socket,
     };
 
     // connect to client
     client.connect().await?;
-
-    // use the access_token to login
-    client.login(access_token).await.ok();
 
     Ok(client)
   }
