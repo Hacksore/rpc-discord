@@ -17,7 +17,7 @@ use tokio::{
   net::windows::named_pipe::{ClientOptions, NamedPipeClient},
 };
 
-use crate::{errors::DiscordRPCError, get_pipe_pattern, pack, unpack};
+use crate::{errors::DiscordRPCError, get_pipe_path, pack, unpack};
 
 #[cfg(target_family = "windows")]
 type ReadHalfType = ReadHalf<NamedPipeClient>;
@@ -50,7 +50,10 @@ impl DiscordIpcSocket {
 
   #[cfg(target_family = "unix")]
   async fn get_inner_socket() -> Result<(ReadHalfType, WriteHalfType)> {
-    let path = get_pipe_pattern();
+    let path = match get_pipe_path() {
+      Some(p) => p,
+      None => return Result::Err(DiscordRPCError::PipeNotFound),
+    };
 
     if let Ok(socket) = UnixStream::connect(&path).await {
       return Ok(socket.into_split());

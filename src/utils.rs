@@ -37,36 +37,30 @@ pub fn unpack(data: Vec<u8>) -> Result<(u32, u32)> {
   Ok((opcode, header))
 }
 
-const ENV_KEYS: [&str; 4] = ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"];
+/// Finds the discord IPC pipe path
+pub fn get_pipe_path() -> Option<PathBuf> {
+  #[cfg(target_os = "windows")]
+  let possible_paths = vec![r"\\?\pipe\discord-ipc-".to_path_buf()];
 
-/// returns the path of the temp dir on a unix system
-pub fn temp_directory() -> PathBuf {
-  let mut path = String::new();
+  #[cfg(target_family = "unix")]
+  let mut possible_paths = vec!["/tmp/discord-ipc-".to_string()];
 
-  for key in &ENV_KEYS {
-    match var(key) {
-      Ok(val) => {
-        path = val;
-        break;
-      }
-      Err(_e) => continue,
-    }
+  if let Ok(runtime_dir) = var("XDG_RUNTIME_DIR") {
+    // Flatpak installed Discord
+    possible_paths.push(runtime_dir.clone() + "/app/com.discordapp.Discord/discord-ipc-");
+    // Non-Flatpak installed Discord
+    possible_paths.push(runtime_dir + "/discord-ipc-");
   }
-  PathBuf::from(path)
-}
 
-/// iterate over 0-10 index and check if files exists then return the path
-pub fn get_pipe_pattern() -> PathBuf {
   for i in 0..10 {
-    #[cfg(target_os = "windows")]
-    let path = format!(r"\\?\pipe\discord-ipc-{}", i);
+    for p in &possible_paths {
+      let path: String = format!("{}{}", p, i);
 
-    #[cfg(target_family = "unix")]
-    let path = temp_directory().join(format!("discord-ipc-{}", i));
-
-    if Path::new(&path).exists() {
-      return Path::new(&path).to_path_buf();
+      if Path::new(&path).exists() {
+        return Some(Path::new(&path).to_path_buf());
+      }
     }
   }
-  panic!("Could not find discord-ipc-0");
+
+  None
 }
