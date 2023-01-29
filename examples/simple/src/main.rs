@@ -37,7 +37,7 @@ fn handle_message(event: EventReceive) {
   }
 }
 
-const CHANNEL_ID: &str = "1069332468932554962";
+const CHANNEL_ID: &str = "513983880303345665";
 
 #[tokio::main]
 async fn main() -> rpc_discord::Result<()> {

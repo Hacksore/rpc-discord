@@ -43,7 +43,7 @@ pub fn get_pipe_path() -> Option<PathBuf> {
   let mut possible_paths = HashSet::new();
 
   #[cfg(target_os = "windows")]
-  possible_paths.insert(r"\\?\pipe\discord-ipc-".to_path_buf());
+  possible_paths.insert(r"\\?\pipe\discord-ipc-".to_string());
 
   #[cfg(target_family = "unix")]
   possible_paths.insert("/tmp/discord-ipc-".to_string());

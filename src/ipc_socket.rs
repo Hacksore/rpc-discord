@@ -39,7 +39,10 @@ impl DiscordIpcSocket {
   /// Used to get the a socket like impl on windows as technical it's a named pipe
   #[cfg(target_os = "windows")]
   async fn get_inner_socket() -> Result<(ReadHalfType, WriteHalfType)> {
-    let path = get_pipe_pattern();
+    let path = match get_pipe_path() {
+      Some(p) => p,
+      None => return Result::Err(DiscordRPCError::PipeNotFound),
+    };
     if let Ok(client) = ClientOptions::new().open(&path) {
       let (read_half, write_half) = tokio::io::split(client);
       return Ok((read_half, write_half));
