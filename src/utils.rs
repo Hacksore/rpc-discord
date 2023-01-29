@@ -55,18 +55,28 @@ pub fn temp_directory() -> PathBuf {
   PathBuf::from(path)
 }
 
-/// iterate over 0-10 index and check if files exists then return the path
+/// Finds the discord IPC pipe path
 pub fn get_pipe_pattern() -> PathBuf {
+  #[cfg(target_os = "windows")]
+  let possible_paths = vec![r"\\?\pipe\discord-ipc-".to_path_buf()];
+
+  #[cfg(target_family = "unix")]
+  let possible_paths = vec![
+    var("XDG_RUNTIME_DIR").unwrap() + "/app/com.discordapp.Discord/discord-ipc-",
+    var("XDG_RUNTIME_DIR").unwrap() + "/discord-ipc-",
+    temp_directory().into_os_string().into_string().unwrap() + "discord-ipc-",
+    "/tmp/discord-ipc-".to_string(),
+  ];
+
   for i in 0..10 {
-    #[cfg(target_os = "windows")]
-    let path = format!(r"\\?\pipe\discord-ipc-{}", i);
+    for p in &possible_paths {
+      let path: String = format!("{}{}", p, i);
 
-    #[cfg(target_family = "unix")]
-    let path = temp_directory().join(format!("discord-ipc-{}", i));
-
-    if Path::new(&path).exists() {
-      return Path::new(&path).to_path_buf();
+      if Path::new(&path).exists() {
+        return Path::new(&path).to_path_buf();
+      }
     }
   }
+
   panic!("Could not find discord-ipc-0");
 }
