@@ -55,9 +55,6 @@ async fn main() -> rpc_discord::Result<()> {
     .await
     .expect("Client failed to connect");
 
-  // login with the access token
-  rpc.login(&access_token).await?;
-
   // ask discord for the current channel
   rpc
     .emit_command(&RPCCommand::GetSelectedVoiceChannel)

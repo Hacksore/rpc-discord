@@ -25,9 +25,9 @@ pub struct DiscordIpcClient {
 impl DiscordIpcClient {
   /// Creates a new `DiscordIpcClient`.
   ///
-  /// # Examples
+  /// ### Examples
   /// ```
-  /// let ipc_client = DiscordIpcClient::new("<some client id>")?;
+  /// let ipc_client = DiscordIpcClient::new("<some client id>", "<some access token>")?;
   /// ```
   pub async fn new(client_id: &str, access_token: &str) -> Result<Self> {
     let socket = DiscordIpcSocket::new().await?;
@@ -41,35 +41,22 @@ impl DiscordIpcClient {
     // connect to client
     client.connect().await?;
 
-    // let token = client.access_token;
-    // client.login(access_token.to_string()).await.ok();
+    // use the access_token to login
+    client.login(access_token).await.ok();
 
     Ok(client)
   }
 
-  /// Connects the client to the Discord IPC.
+  /// Connects the client to the Discord IPC
   ///
   /// This method attempts to first establish a connection,
-  /// and then sends a handshake.
-  ///
-  /// # Errors
-  ///
-  /// Returns an `Err` variant if the client
-  /// fails to connect to the socket, or if it fails to
-  /// send a handshake.
-  ///
-  /// # Examples
-  /// ```
-  /// let mut client = discord_ipc::new_client("<some client id>")?;
-  /// client.connect()?;
-  /// ```
+  /// and then sends a handshake
   async fn connect(&mut self) -> Result<()> {
     println!("Connecting to client...");
 
     self.send_handshake().await?;
 
-    // TODO: handle error
-    let (_opcode, payload) = self.socket.recv().await.unwrap();
+    let (_opcode, payload) = self.socket.recv().await?;
 
     // spooky line is not working
     let payload = serde_json::from_str(&payload)?;
@@ -86,15 +73,6 @@ impl DiscordIpcClient {
   }
 
   /// Handshakes the Discord IPC.
-  ///
-  /// This method sends the handshake signal to the IPC.
-  /// It is usually not called manually, as it is automatically
-  /// called by [`connect`] and/or [`reconnect`].
-  ///
-  /// [`connect`]: #method.connect
-  /// [`reconnect`]: #method.reconnect
-  ///
-  /// # Errors
   ///
   /// Returns an `Err` variant if sending the handshake failed.
   async fn send_handshake(&mut self) -> Result<()> {
@@ -176,8 +154,6 @@ impl DiscordIpcClient {
     tokio::spawn(async move {
       loop {
         let (_opcode, payload) = socket_clone.recv().await.unwrap();
-
-        // println!("{}", &payload);
         match serde_json::from_str::<EventReceive>(&payload) {
           Ok(e) => {
             // TODO: give the consumer a ready event so they can sub to events

@@ -11,6 +11,6 @@ Simple demo of this can be found in in [examples](./examples)
 Configure your `.env` in the root of the project
 
 ```
-# run the example/simple code
+# run the examples/simple code
 cargo run --example simple
 ```
