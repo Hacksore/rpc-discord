@@ -45,7 +45,11 @@ pub fn get_pipe_path() -> Option<PathBuf> {
   #[cfg(target_family = "unix")]
   let mut possible_paths = vec!["/tmp/discord-ipc-".to_string()];
 
-  if let Ok(runtime_dir) = var("XDG_RUNTIME_DIR") {
+  // this is for darwin who has crazy paths like
+  // /var/folders/1v/n6w12pg1455gyd172wxd9b2r0000gn/T/discord-ipc-0
+  if let Ok(runtime_dir) = var("TMPDIR") {
+    possible_paths.push(runtime_dir + "/discord-ipc-");
+  } else if let Ok(runtime_dir) = var("XDG_RUNTIME_DIR") {
     // Flatpak installed Discord
     possible_paths.push(runtime_dir.clone() + "/app/com.discordapp.Discord/discord-ipc-");
     // Non-Flatpak installed Discord
