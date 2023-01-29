@@ -5,6 +5,8 @@ use tokio::io;
 
 #[derive(Error, Debug)]
 pub enum DiscordRPCError {
+  #[error("Could not find the IPC pipe")]
+  PipeNotFound,
   #[error("Could not connect to Discord")]
   CouldNotConnect,
   #[error("Failed to convert from slice")]
