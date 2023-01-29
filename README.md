@@ -6,5 +6,11 @@ This lib allows you to connect to your local discord client using use the [RPC A
 
 Simple demo of this can be found in in [examples](./examples)
 
-### Run locally
-`cargo run` to run the main file
+### Running locally
+
+Configure your `.env` in the root of the project
+
+```
+# run the example/simple code
+cargo run --example simple
+```

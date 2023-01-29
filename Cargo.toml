@@ -27,3 +27,6 @@ thiserror = "1.0.37"
 # TODO: we don't need this as a hard dep
 dotenv = "0.15.0"
 
+[[example]]
+name = "simple"
+path = "examples/simple/src/main.rs"

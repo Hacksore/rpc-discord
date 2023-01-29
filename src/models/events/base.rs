@@ -12,7 +12,8 @@ use super::ready::ReadyData;
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "evt")]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum BasedEvent {
+/// All events that come back from the discord RPC
+pub enum EventReturn {
   Ready {
     data: ReadyData,
   },

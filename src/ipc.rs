@@ -1,6 +1,6 @@
 use crate::create_json;
 use crate::ipc_socket::DiscordIpcSocket;
-use crate::models::events::BasedEvent;
+use crate::models::events::EventReturn;
 use crate::models::rpc_command::RPCCommand;
 use crate::opcodes::OPCODES;
 use crate::EventReceive;
@@ -74,7 +74,7 @@ impl DiscordIpcClient {
     // spooky line is not working
     let payload = serde_json::from_str(&payload)?;
     match payload {
-      BasedEvent::Ready { .. } => {
+      EventReturn::Ready { .. } => {
         println!("Connected to discord and got ready event!");
       }
       _ => {
@@ -148,7 +148,11 @@ impl DiscordIpcClient {
 
   /// send a json string payload to the socket
   pub async fn emit_string(&mut self, payload: String) -> Result<()> {
-    self.socket.send(&payload, OPCODES::Frame as u8).await.unwrap();
+    self
+      .socket
+      .send(&payload, OPCODES::Frame as u8)
+      .await
+      .unwrap();
     Ok(())
   }
 
@@ -173,15 +177,14 @@ impl DiscordIpcClient {
       loop {
         let (_opcode, payload) = socket_clone.recv().await.unwrap();
 
-        println!("{}", &payload);
+        // println!("{}", &payload);
         match serde_json::from_str::<EventReceive>(&payload) {
           Ok(e) => {
             // TODO: give the consumer a ready event so they can sub to events
-
             func(e);
           }
-          Err(e) => {
-            println!("{:#?}", e);
+          Err(err) => {
+            println!("Unable to deserialize {:?}", err);
           }
         }
       }

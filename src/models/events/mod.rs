@@ -5,7 +5,7 @@ mod ready;
 mod selected_channel;
 mod authenticate;
 
-pub use base::BasedEvent;
+pub use base::EventReturn;
 pub use error::*;
 pub use login::*;
 pub use ready::*;

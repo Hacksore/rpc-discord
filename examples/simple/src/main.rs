@@ -1,13 +1,14 @@
-use rpc_discord::models::rpc_command::RPCCommand;
+use rpc_discord::models::commands::CommandReturn;
+use rpc_discord::models::events::EventReturn;
 use rpc_discord::models::rpc_event::RPCEvent;
-use rpc_discord::models::{commands::*, events::*};
+use rpc_discord::models::rpc_command::RPCCommand;
 use rpc_discord::{DiscordIpcClient, EventReceive};
 
 // get all messages from the client
 fn handle_message(event: EventReceive) {
-  if let EventReceive::CommandReturn(event_type) = event {
+  if let EventReceive::Command(event_type) = event {
     match event_type {
-      BasedCommandReturn::GetSelectedVoiceChannel { data } => {
+      CommandReturn::GetSelectedVoiceChannel { data } => {
         println!("{:#?}", data);
 
         if let Some(data) = data {
@@ -16,7 +17,7 @@ fn handle_message(event: EventReceive) {
           }
         }
       }
-      BasedCommandReturn::SelectVoiceChannel { data } => {
+      CommandReturn::SelectVoiceChannel { data } => {
         println!("{:#?}", data.name);
       }
       _ => {
@@ -24,11 +25,11 @@ fn handle_message(event: EventReceive) {
       }
     }
   } else if let EventReceive::Event(event_type) = event {
-    match event_type {
-      BasedEvent::SpeakingStart { data } => {
+    match event_type.as_ref() {
+      EventReturn::SpeakingStart { data } => {
         println!("{} started speaking", data.user_id);
       }
-      BasedEvent::SpeakingStop { data } => {
+      EventReturn::SpeakingStop { data } => {
         println!("{} stopped speaking", data.user_id);
       }
       _ => {}
@@ -36,7 +37,7 @@ fn handle_message(event: EventReceive) {
   }
 }
 
-const CHANNEL_ID: &str = "1022132922565804062";
+const CHANNEL_ID: &str = "1069332468932554962";
 
 #[tokio::main]
 async fn main() -> rpc_discord::Result<()> {
@@ -44,43 +45,45 @@ async fn main() -> rpc_discord::Result<()> {
   dotenv::dotenv().ok();
 
   // access token from env
-  let access_token = dotenv::var("ACCESS_TOKEN").unwrap();
+  let access_token = dotenv::var("ACCESS_TOKEN").expect("You must set an ACCESS_TOKEN");
 
   // client id from env
-  let client_id = dotenv::var("CLIENT_ID").unwrap();
+  let client_id = dotenv::var("CLIENT_ID").expect("You must set CLIENT_ID");
 
   // connect to discord client with overlayed id
-  let mut client = DiscordIpcClient::new(&client_id, &access_token)
+  let mut rpc = DiscordIpcClient::new(&client_id, &access_token)
     .await
     .expect("Client failed to connect");
 
-  // test
-  client.login(&access_token).await.unwrap();
+  // login with the access token
+  rpc.login(&access_token).await?;
 
-  // sub to all events to via this listener
-  client.handler(handle_message).await;
+  // ask discord for the current channel
+  rpc
+    .emit_command(&RPCCommand::GetSelectedVoiceChannel)
+    .await
+    .ok();
 
-  client
+  rpc
     .emit_command(&RPCCommand::Subscribe(RPCEvent::SpeakingStart {
       channel_id: CHANNEL_ID.to_string(),
     }))
     .await
     .ok();
 
-  client
+  rpc
     .emit_command(&RPCCommand::Subscribe(RPCEvent::SpeakingStop {
       channel_id: CHANNEL_ID.to_string(),
     }))
     .await
     .ok();
 
-  client.emit_command(&RPCCommand::GetSelectedVoiceChannel).await.ok();
+  // create a handler to listen to all events/messages
+  // TODO: this has no access to the client ref :(
+  rpc.handler(handle_message).await;
 
   // Keep running after prev thread starts
   loop {
     std::thread::sleep(std::time::Duration::from_millis(1000));
   }
-
-  // Uncomment if removing the loop above
-  // Ok(())
 }

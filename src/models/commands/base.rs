@@ -4,11 +4,11 @@ use serde::{Deserialize, Serialize};
 
 use super::ChannelData;
 
-/// Currently this handles all the received commands from the discord socket
+/// All command responses that come back from the discord RPC
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "cmd")]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum BasedCommandReturn {
+pub enum CommandReturn {
   GetSelectedVoiceChannel {
     data: Option<ChannelData>,
   },
@@ -20,10 +20,12 @@ pub enum BasedCommandReturn {
 
   /// Subscribe
   Subscribe {
+    // TODO: type this
     data: HashMap<String, String>,
   },
   /// Dispatch
   Dispatch {
+    // TODO: type this
     data: HashMap<String, String>,
   },
 }
