@@ -1,9 +1,9 @@
 use crate::create_json;
 use crate::ipc_socket::DiscordIpcSocket;
-use crate::models::events::EventReturn;
+use crate::models::events::DiscordEvents;
 use crate::models::rpc_command::RPCCommand;
 use crate::opcodes::OPCODES;
-use crate::EventReceive;
+use crate::DiscordMessage;
 use crate::Result;
 use serde_json::json;
 use uuid::Uuid;
@@ -56,7 +56,7 @@ impl DiscordIpcClient {
     // spooky line is not working
     let payload = serde_json::from_str(&payload)?;
     match payload {
-      EventReturn::Ready { .. } => {
+      DiscordEvents::Ready { .. } => {
         println!("Connected to discord and got ready event!");
       }
       _ => {
@@ -124,8 +124,7 @@ impl DiscordIpcClient {
     self
       .socket
       .send(&payload, OPCODES::Frame as u8)
-      .await
-      .unwrap();
+      .await?;
     Ok(())
   }
 
@@ -136,20 +135,19 @@ impl DiscordIpcClient {
     self
       .socket
       .send(json_string, OPCODES::Frame as u8)
-      .await
-      .unwrap();
+      .await?;
     Ok(())
   }
 
   pub async fn handler<F>(&mut self, func: F)
   where
-    F: Fn(EventReceive) + Send + Sync + 'static,
+    F: Fn(DiscordMessage) + Send + Sync + 'static,
   {
     let mut socket_clone = self.socket.clone();
     tokio::spawn(async move {
       loop {
         let (_opcode, payload) = socket_clone.recv().await.unwrap();
-        match serde_json::from_str::<EventReceive>(&payload) {
+        match serde_json::from_str::<DiscordMessage>(&payload) {
           Ok(e) => {
             // TODO: give the consumer a ready event so they can sub to events
             func(e);

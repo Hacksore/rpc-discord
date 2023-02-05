@@ -1,14 +1,14 @@
-use rpc_discord::models::commands::CommandReturn;
-use rpc_discord::models::events::EventReturn;
+use rpc_discord::models::commands::DiscordCommands;
+use rpc_discord::models::events::DiscordEvents;
 use rpc_discord::models::rpc_event::RPCEvent;
 use rpc_discord::models::rpc_command::RPCCommand;
-use rpc_discord::{DiscordIpcClient, EventReceive};
+use rpc_discord::{DiscordIpcClient, DiscordMessage};
 
 // get all messages from the client
-fn handle_message(event: EventReceive) {
-  if let EventReceive::Command(event_type) = event {
+fn handle_message(event: DiscordMessage) {
+  if let DiscordMessage::Command(event_type) = event {
     match event_type {
-      CommandReturn::GetSelectedVoiceChannel { data } => {
+      DiscordCommands::GetSelectedVoiceChannel { data } => {
         println!("{:#?}", data);
 
         if let Some(data) = data {
@@ -17,19 +17,19 @@ fn handle_message(event: EventReceive) {
           }
         }
       }
-      CommandReturn::SelectVoiceChannel { data } => {
+      DiscordCommands::SelectVoiceChannel { data } => {
         println!("{:#?}", data.name);
       }
       _ => {
         println!("{:#?}", event_type);
       }
     }
-  } else if let EventReceive::Event(event_type) = event {
+  } else if let DiscordMessage::Event(event_type) = event {
     match event_type.as_ref() {
-      EventReturn::SpeakingStart { data } => {
+      DiscordEvents::SpeakingStart { data } => {
         println!("{} started speaking", data.user_id);
       }
-      EventReturn::SpeakingStop { data } => {
+      DiscordEvents::SpeakingStop { data } => {
         println!("{} stopped speaking", data.user_id);
       }
       _ => {}
@@ -37,7 +37,7 @@ fn handle_message(event: EventReceive) {
   }
 }
 
-const CHANNEL_ID: &str = "1069332468932554962";
+const CHANNEL_ID: &str = "1022132922565804062";
 
 #[tokio::main]
 async fn main() -> rpc_discord::Result<()> {

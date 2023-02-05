@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::Result;
-
 use super::rpc_event::RPCEvent;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -29,13 +28,13 @@ pub enum RPCCommand {
   CaptureShortcut,
   SetActivity,
   SendActivityJoinInvite,
-  CloseActivityJoinReques,
+  CloseActivityJoinRequest,
   ActivityInviteUser,
   AcceptActivityInvite,
   InviteBrowser,
   DeepLink,
   ConnectionsCallback,
-  BraintreePopupBridgeCallbac,
+  BraintreePopupBridgeCallback,
   GiftCodeBrowser,
   GuildTemplateBrowser,
   Overlay,
@@ -51,9 +50,9 @@ pub enum RPCCommand {
   SendToLobby,
   SearchLobbies,
   ConnectToLobbyVoice,
-  DisconnectFromLobbyVoic,
+  DisconnectFromLobbyVoice,
   SetOverlayLocked,
-  OpenOverlayActivityInvit,
+  OpenOverlayActivityInvite,
   OpenOverlayGuildInvite,
   OpenOverlayVoiceSetting,
   ValidateApplication,
