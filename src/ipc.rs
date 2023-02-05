@@ -1,6 +1,7 @@
 use crate::create_json;
 use crate::ipc_socket::DiscordIpcSocket;
 use crate::models::events::DiscordEvents;
+use crate::models::events::ReadyData;
 use crate::models::rpc_command::RPCCommand;
 use crate::opcodes::OPCODES;
 use crate::DiscordMessage;
@@ -14,26 +15,33 @@ use uuid::Uuid;
 #[allow(missing_docs)]
 /// A wrapper struct for the functionality contained in the
 /// underlying [`DiscordIpc`](trait@DiscordIpc) trait.
-pub struct DiscordIpcClient {
+pub struct DiscordIpcClient<F> {
   /// Client ID of the IPC client.
   pub client_id: String,
   // Socket ref to the open socket
   socket: DiscordIpcSocket,
+
+  // on ready callback
+  on_ready: F,
 }
 
-impl DiscordIpcClient {
+impl<F> DiscordIpcClient<F>
+where
+  F: Fn(ReadyData),
+{
   /// Creates a new `DiscordIpcClient`.
   ///
   /// ### Examples
   /// ```
   /// let ipc_client = DiscordIpcClient::new("<some client id>")?;
   /// ```
-  pub async fn new(client_id: &str) -> Result<Self> {
+  pub async fn new(client_id: &str, on_ready: F) -> Result<Self> {
     let socket = DiscordIpcSocket::new().await?;
 
     let mut client = Self {
       client_id: client_id.to_string(),
       socket,
+      on_ready,
     };
 
     // connect to client
@@ -56,8 +64,9 @@ impl DiscordIpcClient {
     // spooky line is not working
     let payload = serde_json::from_str(&payload)?;
     match payload {
-      DiscordEvents::Ready { .. } => {
+      DiscordEvents::Ready { data } => {
         println!("Connected to discord and got ready event!");
+        (self.on_ready)(data);
       }
       _ => {
         println!("Could not connect to discord...");
@@ -121,10 +130,7 @@ impl DiscordIpcClient {
 
   /// send a json string payload to the socket
   pub async fn emit_string(&mut self, payload: String) -> Result<()> {
-    self
-      .socket
-      .send(&payload, OPCODES::Frame as u8)
-      .await?;
+    self.socket.send(&payload, OPCODES::Frame as u8).await?;
     Ok(())
   }
 
@@ -132,16 +138,13 @@ impl DiscordIpcClient {
   pub async fn emit_command(&mut self, command: &RPCCommand) -> Result<()> {
     let mut command_json = command.to_json()?;
     let json_string = &create_json(&mut command_json)?;
-    self
-      .socket
-      .send(json_string, OPCODES::Frame as u8)
-      .await?;
+    self.socket.send(json_string, OPCODES::Frame as u8).await?;
     Ok(())
   }
 
-  pub async fn handler<F>(&mut self, func: F)
+  pub async fn handler<Func>(&mut self, func: Func)
   where
-    F: Fn(DiscordMessage) + Send + Sync + 'static,
+    Func: Fn(DiscordMessage) + Send + Sync + 'static,
   {
     let mut socket_clone = self.socket.clone();
     tokio::spawn(async move {

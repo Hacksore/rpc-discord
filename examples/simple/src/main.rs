@@ -1,7 +1,7 @@
 use rpc_discord::models::commands::DiscordCommands;
 use rpc_discord::models::events::DiscordEvents;
-use rpc_discord::models::rpc_event::RPCEvent;
 use rpc_discord::models::rpc_command::RPCCommand;
+use rpc_discord::models::rpc_event::RPCEvent;
 use rpc_discord::{DiscordIpcClient, DiscordMessage};
 
 // get all messages from the client
@@ -51,9 +51,11 @@ async fn main() -> rpc_discord::Result<()> {
   let client_id = dotenv::var("CLIENT_ID").expect("You must set CLIENT_ID");
 
   // connect to discord client with overlayed id
-  let mut rpc = DiscordIpcClient::new(&client_id)
-    .await
-    .expect("Client failed to connect");
+  let mut rpc = DiscordIpcClient::new(&client_id, |event| {
+    println!("ready, {}", event.user.discriminator);
+  })
+  .await
+  .expect("Client failed to connect");
 
   // use the access_token to login
   rpc.login(&access_token).await.ok();
