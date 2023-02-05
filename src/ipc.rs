@@ -13,6 +13,7 @@ use uuid::Uuid;
 
 #[allow(dead_code)]
 #[allow(missing_docs)]
+#[derive(Clone)]
 /// A wrapper struct for the functionality contained in the
 /// underlying [`DiscordIpc`](trait@DiscordIpc) trait.
 pub struct DiscordIpcClient<F> {

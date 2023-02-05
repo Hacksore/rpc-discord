@@ -1,7 +1,7 @@
 use rpc_discord::models::commands::DiscordCommands;
 use rpc_discord::models::events::DiscordEvents;
 use rpc_discord::models::rpc_command::RPCCommand;
-use rpc_discord::models::rpc_event::RPCEvent;
+// use rpc_discord::models::rpc_event::RPCEvent;
 use rpc_discord::{DiscordIpcClient, DiscordMessage};
 
 // get all messages from the client
@@ -9,16 +9,22 @@ fn handle_message(event: DiscordMessage) {
   if let DiscordMessage::Command(event_type) = event {
     match event_type {
       DiscordCommands::GetSelectedVoiceChannel { data } => {
-        println!("{:#?}", data);
+        // assume that the data was valid
 
-        if let Some(data) = data {
-          for user in data.voice_states.iter() {
-            println!("{}", user.nick);
-          }
-        }
-      }
-      DiscordCommands::SelectVoiceChannel { data } => {
-        println!("{:#?}", data.name);
+        // rpc
+        //   .emit_command(&RPCCommand::Subscribe(RPCEvent::SpeakingStart {
+        //     channel_id: data.id
+        //   }))
+        //   .await
+        //   .ok();
+
+        // rpc
+        //   .emit_command(&RPCCommand::Subscribe(RPCEvent::SpeakingStop {
+        //     channel_id: CHANNEL_ID.to_string(),
+        //   }))
+        //   .await
+        //   .ok();
+
       }
       _ => {
         println!("{:#?}", event_type);
@@ -63,20 +69,6 @@ async fn main() -> rpc_discord::Result<()> {
   // ask discord for the current channel
   rpc
     .emit_command(&RPCCommand::GetSelectedVoiceChannel)
-    .await
-    .ok();
-
-  rpc
-    .emit_command(&RPCCommand::Subscribe(RPCEvent::SpeakingStart {
-      channel_id: CHANNEL_ID.to_string(),
-    }))
-    .await
-    .ok();
-
-  rpc
-    .emit_command(&RPCCommand::Subscribe(RPCEvent::SpeakingStop {
-      channel_id: CHANNEL_ID.to_string(),
-    }))
     .await
     .ok();
 
